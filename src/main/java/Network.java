@@ -99,10 +99,22 @@ so that, for example, a later change to one of the instances does not affect the
             return false;
         }
 
-        if(!graph.containsKey(ip1)){
-            graph.put(ip1, new TreeSet<>(List.of(ip2)));
+        if(graph.containsKey(ip1)){
+            if(graph.get(ip1).contains(ip2)){
+                return false;
+            }
+            graph.get(ip1).add(ip2);
             return true;
         }
+
+        if(graph.containsKey(ip2)){
+            if(graph.get(ip2).contains(ip1)){
+                return false;
+            }
+            graph.get(ip2).add(ip1);
+            return true;
+        }
+
         graph.get(ip1).add(ip2);
 	    return true;
 
