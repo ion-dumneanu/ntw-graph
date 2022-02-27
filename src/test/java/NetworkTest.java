@@ -45,8 +45,9 @@ class NetworkTest {
 
 
     @Test
-    void testConnect() {
-        fail("Not yet implemented");
+    void testConnect() throws ParseException {
+        String input = "(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)";
+        assertTrue(new Network(input).connect(new IP("34.49.145.239"), new IP("231.189.0.127")));
     }
 
     @Test

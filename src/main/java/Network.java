@@ -115,7 +115,7 @@ so that, for example, a later change to one of the instances does not affect the
             return true;
         }
 
-        graph.get(ip1).add(ip2);
+        graph.put(ip1, new LinkedHashSet<>(List.of(ip2)));
 	    return true;
 
     /*
