@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ thrown.*/
 //        System.out.println(adjList);
 
 /*
-        This constructor creates a new object instance and appends the passed non-empty and
+This constructor creates a new object instance and appends the passed non-empty and
 valid tree topology. The tree topology is written as a character string in brackets
 specified and must correspond to the previously specified format of the parentheses notation.
 If this is not possible or the format is violated, a ParseException is thrown in the constructor
@@ -78,7 +79,7 @@ so that, for example, a later change to one of the instances does not affect the
 
     public List<IP> list() {
         final Set<IP> items = new TreeSet<>();
-        for (Map.Entry<IP,Set<IP>> entry:graph.entrySet()
+        for (Entry<IP,Set<IP>> entry:graph.entrySet()
              ) {
             items.add(entry.getKey());
             items.addAll(entry.getValue());
@@ -118,14 +119,14 @@ so that, for example, a later change to one of the instances does not affect the
         graph.put(ip1, new LinkedHashSet<>(List.of(ip2)));
 	    return true;
 
-    /*
+/*
 This method adds a
 new connection between two existing network nodes.
 
 These are through the two
 arguments for their respective IP addresses. Failed a new connection successfully
 are added, returns true, else false always returns.
-    * */
+* */
     }
 
     public boolean disconnect(final IP ip1, final IP ip2) {
@@ -133,9 +134,9 @@ are added, returns true, else false always returns.
         if(!nodes.containsAll(List.of(ip1,ip2))){
             return false;
         }
-        if(graph.size()==1){
-            return false;
-        }
+//        if(graph.size()==1){
+//            return false;
+//        }
 
         if(graph.containsKey(ip1)){
             graph.get(ip1).remove(ip2);
@@ -164,16 +165,23 @@ If a connection could be removed successfully, true is returned, otherwise alway
 
     public boolean contains(final IP ip) {
 	    return list().contains(ip);
-
-      /*
-       This method returns true if the
-Object instance contains a node with the specified IP address. Otherwise always will
-returned false.
-      * */
     }
 
     public int getHeight(final IP root) {
-	    return 0;
+        int height = 0;
+        boolean hasRoot = false;
+
+        for (Entry<IP, Set<IP>> entry : graph.entrySet()) {
+           if(!hasRoot && entry.getKey().equals(root)){
+               hasRoot = true;
+//               height++;
+           }
+
+           if(hasRoot){
+               height++;
+           }
+        }
+        return height;
 
     /*
      This method returns the integer height of a
@@ -186,7 +194,27 @@ If the IP address is not assigned internally, 0 is always returned.
     }
 
     public List<List<IP>> getLevels(final IP root) {
-	    return null;
+        final List<List<IP>> levels = new ArrayList<>();
+        if(!list().contains(root)){
+            return levels;
+        }else{
+            levels.add(List.of(root));
+        }
+
+        boolean reachedRoot = false;
+        for (Entry<IP, Set<IP>> entry : graph.entrySet()) {
+            if(!reachedRoot && entry.getKey().equals(root)){
+                reachedRoot = true;
+                levels.add(new ArrayList<>(entry.getValue()));
+                continue;
+            }
+
+            if(reachedRoot){
+                levels.add(new ArrayList<>(entry.getValue()));
+            }
+        }
+
+	    return levels;
 
         /*
         This method returns the level structure
@@ -221,10 +249,22 @@ Care must be taken that the returned list has no side effects on the instance.
     }
 
     public String toString(IP root) {
-        if(graph.containsKey(root)){
-            return Stream.concat(List.of(root).stream(), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(", ")"));
+        if(!list().contains(root)){
+            return null;
         }
-	    return null;
+        StringBuilder builder = new StringBuilder("("+root);
+        if (graph.containsKey(root)) {
+            for (IP ipEntry : graph.get(root)) {
+                if (graph.containsKey(ipEntry)) {
+                    builder.append(" "+toString(ipEntry));
+                    continue;
+                }
+                builder.append(" "+ipEntry);
+            }
+        }
+        builder.append(")");
+//            return Stream.concat(List.of(root).stream(), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(", ")"));
+	    return builder.toString();
     /*
     This method returns the bracket notation as
 string for a tree topology.

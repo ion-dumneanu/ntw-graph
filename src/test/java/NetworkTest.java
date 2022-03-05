@@ -14,7 +14,7 @@ class NetworkTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"(gresit iar aici)"})
+    @ValueSource(strings = {"(gresit aici)"})
     void testNotValid(String input) {
         assertThrows(ParseException.class, ()->{new Network(input);});
     }
@@ -51,8 +51,11 @@ class NetworkTest {
     }
 
     @Test
-    void testDisconnect() {
-        fail("Not yet implemented");
+    void testDisconnect() throws ParseException {
+        String input = "(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)";
+        final Network ntwGraph = new Network(input);
+        assertTrue(ntwGraph.disconnect(new IP("85.193.148.81"), new IP("231.189.0.127")));
+        System.out.println(ntwGraph.toString(new IP("85.193.148.81")));
     }
 
     @Test
