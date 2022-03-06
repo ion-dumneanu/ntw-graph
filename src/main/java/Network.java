@@ -64,16 +64,15 @@ thrown.
 
 
     public boolean add(final Network subnet) {
-	    return false;
+//	    subnet.getLevels()
+        return false;
+
 
     /*
-This method copies the tree topologies
-of the passed object instance into its own instance. If connections or network nodes
-from the two instances are the same due to their IP addresses, they are merged.
-If the tree topologies could be successfully copied and thus the own instance
-has changed internally, true is returned, else false is always returned.
-Make sure that there are no side effects between these two object instances,
-so that, for example, a later change to one of the instances does not affect the other.
+This method copies the tree topologies of the passed object instance into its own instance.
+If connections or network nodes from the two instances are the same due to their IP addresses, they are merged.
+If the tree topologies could be successfully copied and thus the own instance has changed internally, true is returned, else false is always returned.
+Make sure that there are no side effects between these two object instances, so that, for example, a later change to one of the instances does not affect the other.
     * */
     }
 
@@ -134,9 +133,9 @@ are added, returns true, else false always returns.
         if(!nodes.containsAll(List.of(ip1,ip2))){
             return false;
         }
-//        if(graph.size()==1){
-//            return false;
-//        }
+        if(graph.size()==1 && graph.entrySet().iterator().next().getValue().size()==1){
+            return false;
+        }
 
         if(graph.containsKey(ip1)){
             graph.get(ip1).remove(ip2);

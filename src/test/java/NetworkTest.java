@@ -1,8 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,9 +30,7 @@ class NetworkTest {
     @ValueSource(strings = {"(85.193.148.81 (141.255.1.133 34.49.145.239) 231.189.0.127)"})
     void testList(String input) throws ParseException {
         Set<IP> sorted = new TreeSet<>(List.of(new IP("85.193.148.81"),new IP("141.255.1.133"), new IP("34.49.145.239"), new IP("231.189.0.127")));
-        System.out.println(new Network(input).list());
-        System.out.println(new ArrayList<>(sorted));
-        assertTrue(new ArrayList<>(sorted).equals(new Network(input).list()));
+        assertEquals(new ArrayList<>(sorted), new Network(input).list());
     }
 
 
@@ -55,22 +51,41 @@ class NetworkTest {
         String input = "(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)";
         final Network ntwGraph = new Network(input);
         assertTrue(ntwGraph.disconnect(new IP("85.193.148.81"), new IP("231.189.0.127")));
-        System.out.println(ntwGraph.toString(new IP("85.193.148.81")));
     }
 
     @Test
-    void testContains() {
-        fail("Not yet implemented");
+    void testNotAllowedDisconnect() throws ParseException {
+        String input = "(85.193.148.81 231.189.0.127)";
+        final Network ntwGraph = new Network(input);
+        assertFalse(ntwGraph.disconnect(new IP("85.193.148.81"), new IP("231.189.0.127")));
     }
 
     @Test
-    void testGetHeight() {
-        fail("Not yet implemented");
+    void testContains() throws ParseException {
+        String input = "(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)";
+        final Network network = new Network(input);
+        assertTrue(network.contains(new IP("34.49.145.239")));
     }
 
     @Test
-    void testGetLevels() {
-        fail("Not yet implemented");
+    void testGetHeight() throws ParseException {
+        String input = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+        Network network = new Network(input);
+        assertEquals(3, network.getHeight(new IP("85.193.148.81")));
+    }
+
+    @Test
+    void testGetLevels() throws ParseException {
+        String input = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+        Network network = new Network(input);
+        List<List<IP>> expected = List.of(
+                List.of(new IP("85.193.148.81")),
+                List.of(new IP("141.255.1.133"), new IP("34.49.145.239"), new IP("231.189.0.127")),
+                List.of(new IP("122.117.67.158"), new IP("0.146.197.108")),
+                List.of(new IP("77.135.84.171"), new IP("39.20.222.120"), new IP("252.29.23.0"), new IP("116.132.83.77"))
+        );
+
+        assertEquals(expected, network.getLevels(new IP("85.193.148.81")));
     }
 
     @Test
@@ -79,14 +94,11 @@ class NetworkTest {
     }
 
     @Test
-    void testToString(String input) throws ParseException {
+    void testToString() throws ParseException {
+        final Network network = new Network("(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))");
 
-        IP root = new IP("141.255.1.133");
-        List<List<IP>> levels = List.of(List.of(root), List.of(new IP("122.117.67.158"), new IP("0.146.197.108")));
-        final Network network = new Network(root, levels.get(1));
-
-        final String expected = "(141.255.1.133 0.146.197.108 122.117.67.158)";
-        assertEquals(expected, network.toString(root));
+        final String expected = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+        assertEquals(expected, network.toString(new IP("85.193.148.81")));
     }
 
 }

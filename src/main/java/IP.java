@@ -7,7 +7,7 @@ public class IP implements Comparable<IP> {
     private final static String PART_REGEXP = "([0-9]|([1-9]\\d)|(1\\d{2})|(2[1-4]\\d)|25[0-5])";
     public final static String REGEXP = PART_REGEXP + "\\." + PART_REGEXP + "\\." + PART_REGEXP + "\\." + PART_REGEXP;
 
-    private List<Integer> parts = new ArrayList<Integer>();
+    private List<Integer> parts = new ArrayList<>();
 
     public IP(final String pointNotation) throws ParseException {
         if (pointNotation == null || pointNotation.isBlank()) {
@@ -27,7 +27,7 @@ public class IP implements Comparable<IP> {
     }
 
     public List<Integer> getParts() {
-        return new ArrayList<Integer>(parts);
+        return new ArrayList<>(parts);
     }
 
     @Override
@@ -55,5 +55,9 @@ public class IP implements Comparable<IP> {
     @Override
     public int hashCode() {
         return toString().hashCode();
+    }
+
+    public static IP copy(IP from) throws ParseException {
+        return new IP(from.toString());
     }
 }

@@ -1,6 +1,7 @@
 import java.util.List;
 
 public class Test {
+
     public static void main(String[] args) throws ParseException {
         // Construct initial network
         IP root = new IP("141.255.1.133");
@@ -15,14 +16,13 @@ public class Test {
         // true
         System.out.println(List.of(List.of(root), levels.get(1)).equals(network.getLevels(root)));
 
-        //TODO: specify what change means?
 
         // "Change" root and call toString, getHeight and getLevels again
         root = new IP("122.117.67.158");
 
-        // TODO:Inconsistency: Line below doesn't make sense. Double check it!!!
+// TODO:Inconsistency: Line below doesn't make sense. Double check it!!!
 //        levels = List.of(List.of(root), List.of(new IP("141.255.1.133")), List.of(new IP("0.146.197.108")));
-        levels = List.of(List.of(root), List.of(new IP("141.255.1.133"), new IP("0.146.197.108")));
+        levels = List.of(List.of(root), List.of(new IP("141.255.1.133")), List.of(new IP("0.146.197.108")));
         network = new Network("(122.117.67.158 (141.255.1.133 0.146.197.108))");
 
         // true
@@ -34,6 +34,10 @@ public class Test {
 
         // true
         System.out.println(levels.equals(network.getLevels(root)));
+
+
+        //TODO: >>> continue here
+        System.out.println("aici>");
 
         // Try to add circular dependency
         // false
