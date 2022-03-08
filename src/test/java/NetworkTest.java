@@ -1,9 +1,11 @@
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -22,7 +24,7 @@ class NetworkTest {
                             "(141.255.1.133 122.117.67.158 0.146.197.108)",
                             "(231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)",
                             "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))"})
-    void testConstructorWithStr11(String input) throws ParseException {
+    void testConstructorWithString(String input) throws ParseException {
         new Network(input);
     }
 
@@ -34,11 +36,14 @@ class NetworkTest {
     }
 
 
-    @Test
-    void testAdd() {
-        fail("Not yet implemented");
+    @ParameterizedTest
+    @ValueSource(strings = {"(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)",
+            "(141.255.1.133 122.117.67.158 0.146.197.108)",
+            "(231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)",
+            "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))"})
+    void testConstructorWithStr11(String input) throws ParseException {
+        new Network(input);
     }
-
 
     @Test
     void testConnect() throws ParseException {
@@ -88,9 +93,24 @@ class NetworkTest {
         assertEquals(expected, network.getLevels(new IP("85.193.148.81")));
     }
 
+
     @Test
     void testGetRoute() throws ParseException {
-        fail("Not yet implemented");
+        String input = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77) (211.189.0.127 (71.135.84.171 (31.20.222.120 (251.29.23.0 111.132.83.77)))))";
+        final Network network = new Network(input);
+
+        final IP start = new IP("85.193.148.81");
+        final IP end = new IP("111.132.83.77");
+
+        final List<IP> expectedRoute = List.of("85.193.148.81", "211.189.0.127", "71.135.84.171", "31.20.222.120", "251.29.23.0", "111.132.83.77").stream().map(pointNotation -> {
+            try {
+                return new IP(pointNotation);
+            } catch (ParseException e) {
+                throw new RuntimeException("Invalid IP value: " + e.getMessage());
+            }
+        }).collect(Collectors.toList());
+        final List<IP> actualRoute = network.getRoute(start, end);
+        assertEquals(expectedRoute, actualRoute);
     }
 
     @Test
@@ -100,5 +120,20 @@ class NetworkTest {
         final String expected = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
         assertEquals(expected, network.toString(new IP("85.193.148.81")));
     }
+
+    @ParameterizedTest
+    @CsvSource({"(122.117.67.158 (141.255.1.133 0.146.197.108)),122.117.67.158",
+                "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)),85.193.148.81"})
+    void testGetRoot(String input, String expected) throws ParseException {
+        Network network = new Network(input);
+        assertEquals(new IP(expected), network.getRoot());
+    }
+
+    @Test
+    void testAdd() throws ParseException {
+        System.out.println(List.of(new IP("123.23.22.22")).subList(1,1));
+
+    }
+
 
 }

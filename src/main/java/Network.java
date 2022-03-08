@@ -3,11 +3,10 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Network {
 
-    private Map<IP, Set<IP>> graph = new LinkedHashMap<>();
+    private final  Map<IP, Set<IP>> graph = new LinkedHashMap<>();
 
     public Network(final IP root, final List<IP> children) {
         graph.put(root, new TreeSet<>(children));
@@ -62,9 +61,25 @@ thrown.
 */
     }
 
+    public IP getRoot(){
+        return  graph.entrySet().stream().map(Entry::getKey).findFirst().orElseThrow();
+    }
 
     public boolean add(final Network subnet) {
-//	    subnet.getLevels()
+
+        //FIXME: to be continue...
+        final List<IP> subnetList = subnet.list();
+        final List<IP> thisList = list();
+        final IP subnetRoot = subnet.getRoot();
+        final List<List<IP>> subnetLevels = subnet.getLevels(subnetRoot);
+
+        if(thisList.stream().noneMatch(subnetList::contains)){
+              subnetLevels.forEach(item->{
+                  graph.put(item.get(0), new TreeSet<>(item.subList(1,item.size())));
+              });
+              return true;
+        }
+
         return false;
 
 
@@ -234,14 +249,30 @@ have on the instance.
     }
 
     public List<IP> getRoute(final IP start, final IP end) {
-	    return null;
+        if(graph.get(start)==null || graph.get(start).isEmpty()){
+            return List.of();
+        }
+        if(graph.get(start).contains(end)){
+            return List.of(start,end);
+        }
+        final List<IP> result = new ArrayList<>();
+        for (IP item: graph.get(start)
+        ) {
+            result.addAll(getRoute(item, end));
+            if(!result.isEmpty()){
+                result.add(0,start);
+            }
+        }
+        return result;
         /*
-        This method
-gives a list of the individual IP addresses of the network nodes of the shortest route between the
-the start and end node specified by the respective argument. The IP address of
-The starting node is the first item in this list and the IP address of the ending node is the last
-Element. The consecutive network nodes in the list must always go through a connection
-be connected in the tree topology. If one of the two specified network nodes does not exist
+This method gives a list of the individual IP addresses of the network nodes of the shortest route between the
+the start and end node specified by the respective argument.
+The IP address of The starting node is the first item in this list and the IP address of the ending node is the last Element.
+
+The consecutive network nodes in the list must always go through a connection
+be connected in the tree topology.
+
+If one of the two specified network nodes does not exist
 or there is no path between the two, just an instantiated empty list is returned.
 Care must be taken that the returned list has no side effects on the instance.
         * */
