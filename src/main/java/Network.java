@@ -1,8 +1,10 @@
 import java.util.*;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class Network {
 
@@ -25,10 +27,36 @@ thrown.*/
 
     public Network(final String bracketNotation) throws ParseException {
         if(bracketNotation==null || bracketNotation.isBlank() || !bracketNotation.matches("\\(.+\\)")){
-            throw new ParseException("invalid network bracket notation provided: "+bracketNotation);
+            throw new ParseException("Invalid network bracket notation provided: "+bracketNotation);
         }
 
-        Map<IP, Set<IP>> adjList = graph;
+        final List<Entry<IP, IP>> edges = calcEdges(bracketNotation);
+        boolean hasCycle = doesTheyShapeACycle(edges);
+        if(hasCycle){
+            throw new ParseException("A network notation with cycle provided: "+bracketNotation);
+        }
+
+        edges.forEach(entry->{
+            graph.putIfAbsent(entry.getKey(), new LinkedHashSet<>());
+            graph.get(entry.getKey()).add(entry.getValue());
+        });
+
+/*
+This constructor creates a new object instance and appends the passed non-empty and
+valid tree topology. The tree topology is written as a character string in brackets
+specified and must correspond to the previously specified format of the parentheses notation.
+If this is not possible or the format is violated, a ParseException is thrown in the constructor
+thrown.
+*/
+    }
+
+    private static boolean doesTheyShapeACycle(List<Entry<IP, IP>> edges) {
+        return edges.stream().collect(groupingBy(Entry::getValue)).entrySet().stream().anyMatch(entry -> entry.getValue() != null && entry.getValue().size() > 1);
+    }
+
+    public static List<Entry<IP, IP>> calcEdges(String bracketNotation) throws ParseException {
+
+        Map<IP, Set<IP>> adjList = new LinkedHashMap<>();
         Stack<IP> stack = new Stack<>();
         Iterator<String> iterator = List.of(bracketNotation.split("\\s+")).iterator();
 
@@ -50,39 +78,37 @@ thrown.*/
                 adjList.get(stack.peek()).add(new IP(curr));
             }
         }
-//        System.out.println(adjList);
+        final List<Entry<IP,IP>> result = new ArrayList<>();
+        adjList.forEach((parent, leaves) -> leaves.forEach(leaf->result.add(new SimpleImmutableEntry<>(parent,leaf))));
 
-/*
-This constructor creates a new object instance and appends the passed non-empty and
-valid tree topology. The tree topology is written as a character string in brackets
-specified and must correspond to the previously specified format of the parentheses notation.
-If this is not possible or the format is violated, a ParseException is thrown in the constructor
-thrown.
-*/
+        return result;
     }
 
     public IP getRoot(){
         return  graph.entrySet().stream().map(Entry::getKey).findFirst().orElseThrow();
     }
 
-    public boolean add(final Network subnet) {
+    public boolean add(final Network subnet) throws ParseException {
+        final List<Entry<IP, IP>> networkEdges = calcEdges(toString(getRoot()));
+        final List<Entry<IP, IP>> subnetEdges = calcEdges(subnet.toString(subnet.getRoot()));
 
-        //FIXME: to be continue...
-        final List<IP> subnetList = subnet.list();
-        final List<IP> thisList = list();
-        final IP subnetRoot = subnet.getRoot();
-        final List<List<IP>> subnetLevels = subnet.getLevels(subnetRoot);
-
-        if(thisList.stream().noneMatch(subnetList::contains)){
-              subnetLevels.forEach(item->{
-                  graph.put(item.get(0), new TreeSet<>(item.subList(1,item.size())));
-              });
-              return true;
+        if(networkEdges.containsAll(subnetEdges)){
+            return false;
         }
 
-        return false;
+        final List<Entry<IP,IP>> allEdges = new ArrayList<>();
+        allEdges.addAll(networkEdges);
+        allEdges.addAll(subnetEdges);
+        if(doesTheyShapeACycle(allEdges)){
+            throw new ParseException("New subnet network causes a cycle!");
+        }
 
+        subnetEdges.forEach(entry->{
+            graph.putIfAbsent(entry.getKey(), new LinkedHashSet<>());
+            graph.get(entry.getKey()).add(entry.getValue());
+        });
 
+        return true;
     /*
 This method copies the tree topologies of the passed object instance into its own instance.
 If connections or network nodes from the two instances are the same due to their IP addresses, they are merged.
@@ -114,6 +140,12 @@ Make sure that there are no side effects between these two object instances, so 
             return false;
         }
 
+        final List<IP> edge = List.of(ip1, ip2);
+        if(graph.keySet().stream().noneMatch(edge::contains)){
+            //Preventing adding cycle in graph.
+            return false;
+        }
+
         if(graph.containsKey(ip1)){
             if(graph.get(ip1).contains(ip2)){
                 return false;
@@ -130,9 +162,7 @@ Make sure that there are no side effects between these two object instances, so 
             return true;
         }
 
-        graph.put(ip1, new LinkedHashSet<>(List.of(ip2)));
-	    return true;
-
+        return true;
 /*
 This method adds a
 new connection between two existing network nodes.

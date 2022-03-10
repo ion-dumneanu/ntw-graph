@@ -14,7 +14,8 @@ class NetworkTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"(gresit aici)"})
+    @ValueSource(strings = {"(gresit aici)",
+                            "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) (0.146.197.108 111.111.111.111) (111.111.111.111 141.255.1.133))"})
     void testNotValid(String input) {
         assertThrows(ParseException.class, ()->{new Network(input);});
     }
@@ -48,7 +49,7 @@ class NetworkTest {
     @Test
     void testConnect() throws ParseException {
         String input = "(85.193.148.81 141.255.1.133 34.49.145.239 231.189.0.127)";
-        assertTrue(new Network(input).connect(new IP("34.49.145.239"), new IP("231.189.0.127")));
+        assertFalse(new Network(input).connect(new IP("34.49.145.239"), new IP("231.189.0.127")));
     }
 
     @Test
@@ -132,8 +133,46 @@ class NetworkTest {
     @Test
     void testAdd() throws ParseException {
         System.out.println(List.of(new IP("123.23.22.22")).subList(1,1));
-
     }
+
+    @Test
+    void testCalcEdges() throws ParseException {
+        String input = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+        System.out.println(Network.calcEdges(input));
+    }
+
+    @Test
+    void testAddExistingSubnet() throws ParseException {
+        String network = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+        String subnet = "(231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.70)";
+        assertFalse(new Network(network).add(new Network(subnet)));
+    }
+
+    @Test
+    void testAddShapesACycle() throws ParseException {
+        String networkString = "(231.189.0.127 (77.135.84.171 (39.20.222.120 (252.29.23.0 116.132.83.70))))";
+        String subNetwork = "(111.11.0.1 (39.20.222.120 77.135.84.171))";
+        final Network network = new Network(networkString);
+        final Network subnetwork = new Network(subNetwork);
+
+        assertThrows(ParseException.class, ()->{network.add(subnetwork);});
+    }
+
+    @Test
+    void testAddSuccess() throws ParseException {
+        String expectedResult = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
+
+        String networkStr = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 231.189.0.127)";
+        String subNetworkStr = "(231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)";
+
+        final Network network = new Network(networkStr);
+        final Network subnetwork = new Network(subNetworkStr);
+
+        final boolean addActionResult = network.add(subnetwork);
+        assertTrue(addActionResult);
+        assertEquals(expectedResult, network.toString(new IP("85.193.148.81")));
+    }
+
 
 
 }
