@@ -155,7 +155,7 @@ class NetworkTest {
         final Network network = new Network(networkString);
         final Network subnetwork = new Network(subNetwork);
 
-        assertThrows(ParseException.class, ()->{network.add(subnetwork);});
+        assertFalse(network.add(subnetwork));
     }
 
     @Test

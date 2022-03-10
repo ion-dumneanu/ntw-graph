@@ -100,7 +100,7 @@ thrown.
         allEdges.addAll(networkEdges);
         allEdges.addAll(subnetEdges);
         if(doesTheyShapeACycle(allEdges)){
-            throw new ParseException("New subnet network causes a cycle!");
+            return false;
         }
 
         subnetEdges.forEach(entry->{

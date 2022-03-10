@@ -36,13 +36,12 @@ public class Test {
         System.out.println(levels.equals(network.getLevels(root)));
 
 
-        //TODO: >>> continue here
-        System.out.println("aici>");
-
         // Try to add circular dependency
         // false
         System.out.println(network.add(new Network("(122.117.67.158 0.146.197.108)")));
 
+        //TODO: >>> continue here
+        System.out.println("aici>");
         // Merge two subnets with initial network
         // true
         System.out.println(network.add(new Network("(85.193.148.81 34.49.145.239 231.189.0.127 141.255.1.133)")));
