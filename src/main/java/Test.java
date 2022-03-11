@@ -40,14 +40,16 @@ public class Test {
         // false
         System.out.println(network.add(new Network("(122.117.67.158 0.146.197.108)")));
 
-        //TODO: >>> continue here
-        System.out.println("aici>");
         // Merge two subnets with initial network
         // true
         System.out.println(network.add(new Network("(85.193.148.81 34.49.145.239 231.189.0.127 141.255.1.133)")));
         // true
         System.out.println(
                 network.add(new Network("(231.189.0.127 252.29.23.0" + " 116.132.83.77 39.20.222.120 77.135.84.171)")));
+
+        //TODO: >>> continue here
+        System.out.println("aici> ");
+
         // "Change" root and call toString, getHeight and getLevels again
         root = new IP("85.193.148.81");
         levels = List.of(List.of(root),

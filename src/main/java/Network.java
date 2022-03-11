@@ -3,6 +3,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -90,11 +91,26 @@ thrown.
 
     public boolean add(final Network subnet) throws ParseException {
         final List<Entry<IP, IP>> networkEdges = calcEdges(toString(getRoot()));
-        final List<Entry<IP, IP>> subnetEdges = calcEdges(subnet.toString(subnet.getRoot()));
+        List<Entry<IP, IP>> subnetEdges = calcEdges(subnet.toString(subnet.getRoot()));
 
         if(networkEdges.containsAll(subnetEdges)){
             return false;
         }
+
+        final  List<IP> potentialRootsOfSubnet = list();
+        potentialRootsOfSubnet.retainAll(subnet.list());
+        
+        if(!potentialRootsOfSubnet.isEmpty() && !potentialRootsOfSubnet.contains(subnet.getRoot())){
+            final IP newSubnetRoot = potentialRootsOfSubnet.get(0);
+            //Reroot network tree
+            subnetEdges = subnetEdges.stream().map(item->{
+                if(newSubnetRoot.equals(item.getValue())){
+                    return new SimpleImmutableEntry<IP,IP>(item.getValue(),item.getKey());
+                }
+                return item;
+            }).collect(Collectors.toList());
+        }
+        
 
         final List<Entry<IP,IP>> allEdges = new ArrayList<>();
         allEdges.addAll(networkEdges);

@@ -173,6 +173,15 @@ class NetworkTest {
         assertEquals(expectedResult, network.toString(new IP("85.193.148.81")));
     }
 
+    @Test
+    void testAddMerge() throws ParseException {
+        Network network = new Network( "(122.117.67.158 (141.255.1.133 0.146.197.108))");
+        Network subnetwork = new Network("(85.193.148.81 34.49.145.239 231.189.0.127 141.255.1.133)");
+
+        final boolean addMergeTrue = network.add(subnetwork);
+        System.out.println(network.toString(network.getRoot()));
+        assertTrue(addMergeTrue);
+    }
 
 
 }
