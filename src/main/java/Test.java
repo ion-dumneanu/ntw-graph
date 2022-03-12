@@ -47,21 +47,24 @@ public class Test {
         System.out.println(
                 network.add(new Network("(231.189.0.127 252.29.23.0" + " 116.132.83.77 39.20.222.120 77.135.84.171)")));
 
-        //TODO: >>> continue here
-        System.out.println("aici> ");
+        // "Change" root and call toString, getHeight and getLevels again >>>
+        network = new Network("(85.193.148.81 34.49.145.239 (141.255.1.133 0.146.197.108 122.117.67.158) (231.189.0.127 39.20.222.120 77.135.84.171 116.132.83.77 252.29.23.0))");
+        // "Change" root and call toString, getHeight and getLevels again <<<<<
 
-        // "Change" root and call toString, getHeight and getLevels again
         root = new IP("85.193.148.81");
         levels = List.of(List.of(root),
                 List.of(new IP("34.49.145.239"), new IP("141.255.1.133"), new IP("231.189.0.127")),
                 List.of(new IP("0.146.197.108"), new IP("39.20.222.120"), new IP("77.135.84.171"),
                         new IP("116.132.83.77"), new IP("122.117.67.158"), new IP("252.29.23.0")));
+
         // true
         System.out.println(("(85.193.148.81 34.49.145.239 (141.255.1.133 0.146.197.108"
                 + " 122.117.67.158) (231.189.0.127 39.20.222.120" + " 77.135.84.171 116.132.83.77 252.29.23.0))")
                 .equals(network.toString(root)));
+        //TODO: >>> continue here
+        System.out.println("aici> "+(levels.size() ) +"   "+network.getLevels(root).size());
         // true
-        System.out.println((levels.size() - 1) == network.getHeight(root));
+        System.out.println("?<> "+((levels.size() - 1) == network.getHeight(root)));
         // true
         System.out.println(levels.equals(network.getLevels(root)));
         // true

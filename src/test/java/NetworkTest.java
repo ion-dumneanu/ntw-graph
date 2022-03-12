@@ -114,12 +114,14 @@ class NetworkTest {
         assertEquals(expectedRoute, actualRoute);
     }
 
-    @Test
-    void testToString() throws ParseException {
-        final Network network = new Network("(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))");
+    @ParameterizedTest
+    @CsvSource({
+            "(141.255.1.133 0.146.197.108 122.117.67.158),122.117.67.158,(122.117.67.158 (141.255.1.133 0.146.197.108))",
+            "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)),85.193.148.81,(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))"})
+    void testToString(String input, String rootStr, String expected) throws ParseException {
+        final Network network = new Network(input);
 
-        final String expected = "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77))";
-        assertEquals(expected, network.toString(new IP("85.193.148.81")));
+        assertEquals(expected, network.toString(new IP(rootStr)));
     }
 
     @ParameterizedTest

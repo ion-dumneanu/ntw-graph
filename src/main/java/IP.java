@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.lang.String.join;
+import static java.util.stream.Collectors.toList;
+
 public class IP implements Comparable<IP> {
 
     private final static String PART_REGEXP = "([0-9]|([1-9]\\d)|(1\\d{2})|(2[1-4]\\d)|25[0-5])";
@@ -57,7 +60,7 @@ public class IP implements Comparable<IP> {
         return toString().hashCode();
     }
 
-    public static IP copy(IP from) throws ParseException {
-        return new IP(from.toString());
+    public IP copy() throws ParseException {
+        return new IP(join(".", this.parts.stream().map(i->""+i).collect(toList())));
     }
 }

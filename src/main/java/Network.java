@@ -4,6 +4,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -79,13 +80,19 @@ thrown.
                 adjList.get(stack.peek()).add(new IP(curr));
             }
         }
-        final List<Entry<IP,IP>> result = new ArrayList<>();
-        adjList.forEach((parent, leaves) -> leaves.forEach(leaf->result.add(new SimpleImmutableEntry<>(parent,leaf))));
+//        final List<Entry<IP,IP>> result = new ArrayList<>();
+//        adjList.forEach((parent, leaves) -> leaves.forEach(leaf->result.add(new SimpleImmutableEntry<>(parent,leaf))));
 
+        return calcEdges(adjList);
+    }
+
+    private static List<Entry<IP,IP>> calcEdges(final Map<IP,Set<IP>> adjacentList){
+        final List<Entry<IP,IP>> result = new ArrayList<>();
+        adjacentList.forEach((parent, leaves) -> leaves.forEach(leaf->result.add(new SimpleImmutableEntry<>(parent,leaf))));
         return result;
     }
 
-    public IP getRoot(){
+    public IP getRoot() throws ParseException {
         return  graph.entrySet().stream().map(Entry::getKey).findFirst().orElseThrow();
     }
 
@@ -110,7 +117,6 @@ thrown.
                 return item;
             }).collect(Collectors.toList());
         }
-        
 
         final List<Entry<IP,IP>> allEdges = new ArrayList<>();
         allEdges.addAll(networkEdges);
@@ -183,8 +189,7 @@ Make sure that there are no side effects between these two object instances, so 
 This method adds a
 new connection between two existing network nodes.
 
-These are through the two
-arguments for their respective IP addresses. Failed a new connection successfully
+These are through the two arguments for their respective IP addresses. Failed a new connection successfully
 are added, returns true, else false always returns.
 * */
     }
@@ -234,7 +239,7 @@ If a connection could be removed successfully, true is returned, otherwise alway
         for (Entry<IP, Set<IP>> entry : graph.entrySet()) {
            if(!hasRoot && entry.getKey().equals(root)){
                hasRoot = true;
-//               height++;
+//               height++
            }
 
            if(hasRoot){
@@ -310,7 +315,7 @@ have on the instance.
             }
         }
         return result;
-        /*
+/*
 This method gives a list of the individual IP addresses of the network nodes of the shortest route between the
 the start and end node specified by the respective argument.
 The IP address of The starting node is the first item in this list and the IP address of the ending node is the last Element.
@@ -324,37 +329,81 @@ Care must be taken that the returned list has no side effects on the instance.
         * */
     }
 
+//    public String toString(IP root) {
+//        if(!list().contains(root)){
+//            return null;
+//        }
+//        StringBuilder builder = new StringBuilder("("+root);
+//        if (graph.containsKey(root)) {
+//            for (IP ipEntry : graph.get(root)) {
+//                if (graph.containsKey(ipEntry)) {
+//                    builder.append(" "+toString(ipEntry));
+//                    continue;
+//                }
+//                builder.append(" "+ipEntry);
+//            }
+//        }
+//        builder.append(")");
+////            return Stream.concat(List.of(root).stream(), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(", ")"));
+//	    return builder.toString();
+//    /*
+//        This method returns the bracket notation as
+//    string for a tree topology.
+//
+//    At this point, within this bracket notation must
+//    the IP addresses for each level must be sorted in ascending order according to their 32-bit value.
+//
+//    Consequently, the IP addresses with the lowest bit value are in a left-to-right plane
+//    listed first. This tree topology will be attached to the existing one specified by the argument
+//    Network nodes picked up so that this is considered to be the top network node. If the specified
+//    Address not assigned within the instance is just an instantiated empty string
+//    returned.
+//    * */
+//    }
+
     public String toString(IP root) {
-        if(!list().contains(root)){
+        if (!list().contains(root)) {
             return null;
         }
-        StringBuilder builder = new StringBuilder("("+root);
-        if (graph.containsKey(root)) {
-            for (IP ipEntry : graph.get(root)) {
-                if (graph.containsKey(ipEntry)) {
-                    builder.append(" "+toString(ipEntry));
-                    continue;
-                }
-                builder.append(" "+ipEntry);
+        //"(141.255.1.133 0.146.197.108 122.117.67.158),122.117.67.158,(122.117.67.158 (141.255.1.133 0.146.197.108))",
+
+
+        final HashMap<IP, Set<IP>> forToString = new HashMap<>(graph);
+        final List<Entry<IP, IP>> edges = calcEdges(new HashMap<>(graph));
+
+        StringJoiner joiner = new StringJoiner(" ","(",")");
+        joiner.add(root.toString());
+        graph.get(root).forEach(item->{
+            if(graph.containsKey(item)){
+                joiner.add(toString(item));
+            }else{
+                joiner.add(item.toString());
             }
-        }
-        builder.append(")");
-//            return Stream.concat(List.of(root).stream(), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(", ")"));
-	    return builder.toString();
-    /*
-    This method returns the bracket notation as
-string for a tree topology.
+        });
 
-At this point, within this bracket notation must
-the IP addresses for each level must be sorted in ascending order according to their 32-bit value.
+        return joiner.toString();
 
-Consequently, the IP addresses with the lowest bit value are in a left-to-right plane
-listed first. This tree topology will be attached to the existing one specified by the argument
-Network nodes picked up so that this is considered to be the top network node. If the specified
-Address not assigned within the instance is just an instantiated empty string
-returned.
-    * */
+//        StringBuilder builder = new StringBuilder("(" + root);
+//        if (graph.containsKey(root)) {
+//            for (IP ipEntry : graph.get(root)) {
+//                if (graph.containsKey(ipEntry)) {
+//                    builder.append(" " + toString(ipEntry));
+//                    continue;
+//                }
+//                builder.append(" " + ipEntry);
+//            }
+//        }
+//        builder.append(")");
+////            return Stream.concat(List.of(root).stream(), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(", ")"));
+//        return builder.toString();
     }
+    
 
+    private String toString(IP root, Map<IP,Set<IP>> graph){
+        if(!graph.keySet().contains(graph.get(root))){
+            return Stream.concat(Stream.of(root), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(",")"));
+        }
+        return "";
+    }
 
 }
