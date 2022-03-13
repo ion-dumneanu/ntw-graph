@@ -33,8 +33,7 @@ class NetworkTest {
         List<List<IP>> expected = List.of(
                 List.of(new IP("85.193.148.81")),
                 List.of(new IP("34.49.145.239"), new IP("141.255.1.133"), new IP("231.189.0.127")),
-                List.of(new IP("0.146.197.108"), new IP("122.117.67.158")),
-                List.of(new IP("39.20.222.120"), new IP("77.135.84.171"), new IP("116.132.83.77"), new IP("252.29.23.0"))
+                List.of(new IP("0.146.197.108"), new IP("39.20.222.120"),new IP("77.135.84.171"), new IP("116.132.83.77"), new IP("122.117.67.158"), new IP("252.29.23.0"))
         );
 
         assertEquals(expected, network.getLevels(new IP("85.193.148.81")));
@@ -51,7 +50,7 @@ class NetworkTest {
                 throw new RuntimeException(e);
             }
         }).sorted().collect(Collectors.toList());
-        assertEquals(expectedList, new Network0(input).list());
+        assertEquals(expectedList, new Network(input).list());
     }
 
     @ParameterizedTest
