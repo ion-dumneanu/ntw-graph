@@ -1,8 +1,6 @@
 package edu.kit.informatik;
 
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,7 +26,7 @@ public class Network {
             throw new ParseException("Invalid network bracket notation provided: " + bracketNotation);
         }
 
-        final Set<Entry<IP, IP>> edges = calcEdges(bracketNotation);
+        final Set<Edge> edges = calcEdges(bracketNotation);
         boolean hasCycle = doesTheyShapeACycle(edges);
         if (hasCycle) {
             throw new ParseException("A network notation with cycle provided: " + bracketNotation);
@@ -71,11 +69,11 @@ public class Network {
         }
     }
 
-    private static boolean doesTheyShapeACycle(Set<Entry<IP, IP>> edges) {
-        return edges.stream().collect(groupingBy(Entry::getValue)).entrySet().stream().anyMatch(entry -> entry.getValue() != null && entry.getValue().size() > 1);
+    private static boolean doesTheyShapeACycle(Set<Edge> edges) {
+        return edges.stream().collect(groupingBy(Edge::getValue)).entrySet().stream().anyMatch(entry -> entry.getValue() != null && entry.getValue().size() > 1);
     }
 
-    private static Set<Entry<IP, IP>> calcEdges(String bracketNotation) {
+    private static Set<Edge> calcEdges(String bracketNotation) {
 
         Map<IP, Set<IP>> adjList = new LinkedHashMap<>();
         Stack<IP> stack = new Stack<>();
@@ -103,9 +101,9 @@ public class Network {
         return calcEdges(adjList);
     }
 
-    private static Set<Entry<IP, IP>> calcEdges(final Map<IP, Set<IP>> adjacentList) {
-        final Set<Entry<IP, IP>> result = new HashSet<>();
-        adjacentList.forEach((parent, leaves) -> leaves.forEach(leaf -> result.add(new SimpleImmutableEntry<>(parent, leaf))));
+    private static Set<Edge> calcEdges(final Map<IP, Set<IP>> adjacentList) {
+        final Set<Edge> result = new HashSet<>();
+        adjacentList.forEach((parent, leaves) -> leaves.forEach(leaf -> result.add(new Edge(parent, leaf))));
         return result;
     }
 
@@ -147,19 +145,19 @@ public class Network {
         subnetNodes.retainAll(networkNodes);
         final List<IP> commonNodes = subnetNodes;
 
-        final List<Entry<IP, IP>> networkInvolvedEdges = new ArrayList<>();
+        final List<Edge> networkInvolvedEdges = new ArrayList<>();
         commonNodes.forEach(node -> {
             networkInvolvedEdges.addAll(calcEdges(calcGraphByRoot(node, allNetworkSource)));
         });
 
 
-        final Set<Entry<IP, IP>> subnetworkEdges = new HashSet<>();//calcEdges(subnet.toString(commonNodes.get(0)));
+        final Set<Edge> subnetworkEdges = new HashSet<>();//calcEdges(subnet.toString(commonNodes.get(0)));
 
         commonNodes.forEach(node -> {
             subnetworkEdges.addAll(calcEdges(subnet.toString(node)));
         });
 
-        final Set<Entry<IP, IP>> unionEdges = Stream.concat(networkInvolvedEdges.stream(), subnetworkEdges.stream()).distinct().collect(Collectors.toSet());
+        final Set<Edge> unionEdges = Stream.concat(networkInvolvedEdges.stream(), subnetworkEdges.stream()).collect(Collectors.toSet());
         if (doesTheyShapeACycle(unionEdges)) {
             return false;
         }
@@ -200,20 +198,20 @@ public class Network {
 
         final Map<IP, Set<IP>> graphByRoot = calcGraphByRoot(start, allNetworkSource);
 
-        final Set<Entry<IP, IP>> allEdges = new HashSet<>();
-        allEdges.add(new SimpleImmutableEntry<>(start, end));
+        final Set<Edge> allEdges = new HashSet<>();
+        allEdges.add(new Edge(start, end));
         allEdges.addAll(calcEdges(graphByRoot));
 
         if (doesTheyShapeACycle(allEdges)) {
             return false;
         }
 
-        addEdges(Set.of(new SimpleImmutableEntry<>(start, end)));
+        addEdges(Set.of(new Edge(start, end)));
         return true;
     }
 
-    public boolean disconnect(final IP ip1, final IP ip2) {
-        if (!contains(ip1) || !contains(ip2)) {
+    public boolean disconnect(final IP start, final IP end) {
+        if (start == null || start == null || start.equals(end) || !list().containsAll(List.of(start,end))) {
             return false;
         }
 
@@ -221,16 +219,7 @@ public class Network {
             return false;
         }
 
-        allNetworkSource.get(ip1).remove(ip2);
-        allNetworkSource.get(ip2).remove(ip1);
-        if (allNetworkSource.get(ip1).size() == 0) {
-            allNetworkSource.remove(ip1);
-        }
-        if (allNetworkSource.get(ip2).size() == 0) {
-            allNetworkSource.remove(ip2);
-        }
-
-        return true;
+        return allNetworkSource.get(start).remove(end) && allNetworkSource.get(end).remove(start);
     }
 
     public boolean contains(final IP ip) {
@@ -244,7 +233,16 @@ public class Network {
         if (root == null || !allNetworkSource.keySet().contains(root)) {
             return 0;
         }
-        return getLevels(root).size() - 1;
+
+        final Map<IP, Set<IP>> graphByRoot = calcGraphByRoot(root, this.allNetworkSource);
+        return graphByRoot.get(root).stream().map(item->getSubHeight(item, graphByRoot)).max(Integer::compare).orElse(0)+1;
+    }
+
+    private static int getSubHeight(final IP root, final Map<IP, Set<IP>> graphByRoot){
+        if(!graphByRoot.containsKey(root)){
+            return 0;
+        }
+        return graphByRoot.get(root).stream().map(item->getSubHeight(item, graphByRoot)).max(Integer::compare).orElse(0)+1;
     }
 
     public List<List<IP>> getLevels(final IP root) {
@@ -311,7 +309,7 @@ public class Network {
         return joiner.toString();
     }
 
-    private void addEdges(Set<Entry<IP, IP>> edges) {
+    private void addEdges(Set<Edge> edges) {
         edges.forEach(entry -> {
             allNetworkSource.putIfAbsent(entry.getKey(), new LinkedHashSet<>(List.of(entry.getValue())));
             allNetworkSource.putIfAbsent(entry.getValue(), new LinkedHashSet<>(List.of(entry.getKey())));
@@ -333,5 +331,38 @@ public class Network {
     @Override
     public int hashCode() {
         return list().stream().map(IP::toString).collect(Collectors.joining()).hashCode();
+    }
+
+    public static class Edge {
+        private final IP key;
+        private final IP value;
+
+        public Edge(IP key, IP value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public IP getKey() {
+            return key;
+        }
+
+        public IP getValue() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Edge edge = (Edge) o;
+            return Set.of(getKey(),getValue()).equals(Set.of(edge.getValue(), edge.getKey()));
+        }
+
+        @Override
+        public int hashCode() {
+            final IP[] arr = {key, value};
+            Arrays.sort(arr);
+            return Arrays.hashCode(arr);
+        }
     }
 }

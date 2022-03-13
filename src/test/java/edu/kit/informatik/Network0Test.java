@@ -1,3 +1,5 @@
+package edu.kit.informatik;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -7,11 +9,12 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NetworkTest {
+class Network0Test {
 
     @ParameterizedTest
     @CsvSource({"(141.255.1.133 0.146.197.108 122.117.67.158),141.255.1.133,1",
-                "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)),141.255.1.133,3"})
+                "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)),141.255.1.133,3",
+                "(0.0.0.0 (1.1.1.1 2.2.2.2 3.3.3.3) (4.4.4.4 5.5.5.5 (6.6.6.6 7.7.7.7 (8.8.8.8 (9.9.9.9 10.10.10.10))))),0.0.0.0,5"})
     void getHeight(String input, String root, int height) throws ParseException, IllegalAccessException {
         Network network = new Network(input);
         assertEquals(height, network.getHeight(new IP(root)));
@@ -71,13 +74,7 @@ class NetworkTest {
         final IP start = new IP("85.193.148.81");
         final IP end = new IP("111.132.83.77");
 
-        final List<IP> expectedRoute = List.of("85.193.148.81", "211.189.0.127", "71.135.84.171", "31.20.222.120", "251.29.23.0", "111.132.83.77").stream().map(pointNotation -> {
-            try {
-                return new IP(pointNotation);
-            } catch (ParseException e) {
-                throw new RuntimeException("Invalid IP value: " + e.getMessage());
-            }
-        }).collect(Collectors.toList());
+        final List<IP> expectedRoute = List.of("85.193.148.81", "211.189.0.127", "71.135.84.171", "31.20.222.120", "251.29.23.0", "111.132.83.77").stream().map(IP::new).collect(Collectors.toList());
         final List<IP> actualRoute = network.getRoute(start, end);
         assertEquals(expectedRoute, actualRoute);
     }
@@ -163,6 +160,31 @@ class NetworkTest {
         System.out.println(network.toString(new IP("1.1.1.1")));
         assertTrue(network.connect(new IP(connect1), new IP(connect2)));
         System.out.println(network.toString(new IP("85.193.148.81")));
+    }
+
+//    @Test
+    void testRegexGroup(){
+        // String to be scanned to find the pattern.
+        String line = "(2.2.2.2 (0.0.0.0 1.1.1.1))";
+        String pattern = "\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\)";//"\\([0-9\\s?]+?\\)";
+
+        System.out.println(line.replaceFirst(pattern, "zzzzzzzzzzzzz"));
+
+        System.out.println("(2.2.2.2 (0.0.0.0 1.1.1.1))".matches("\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\)"));
+
+//        // Create a Pattern object
+//        Pattern r = Pattern.compile(pattern);
+//
+//        // Now create matcher object.
+//        Matcher m = r.matcher(line);
+//
+//        if (m.find( )) {
+//            System.out.println("Found value: " + m.group(0) );
+//            System.out.println("Found value: " + m.group(1) );
+//            System.out.println("Found value: " + m.group(2) );
+//        } else {
+//            System.out.println("NO MATCH");
+//        }
     }
 
 }
