@@ -15,6 +15,10 @@ public class Network {
     private final Map<IP, Set<IP>> allNetworkSource = new LinkedHashMap<>();
 
     public Network(final IP root, final List<IP> children) {
+        if(root==null || children==null || children.isEmpty() || children.contains(root) || new HashSet<>(children).size()!=children.size()){
+            throw new IllegalArgumentException();
+        }
+
         allNetworkSource.put(root, new TreeSet<>(children));
         children.forEach(item -> allNetworkSource.put(item, Set.of(root)));
     }
@@ -317,33 +321,17 @@ public class Network {
         });
     }
 
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//
-//        Network network = (Network) o;
-//
-//        return allNetworkSource != null ? allNetworkSource.equals(network.allNetworkSource) : network.allNetworkSource == null;
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return allNetworkSource != null ? allNetworkSource.hashCode() : 0;
-//    }
-
-
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Network network = (Network) o;
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+        Network network = (Network) other;
 
-        return Objects.equals(allNetworkSource, network.allNetworkSource);
+        return Objects.equals(list(), network.list());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allNetworkSource);
+        return list().stream().map(IP::toString).collect(Collectors.joining()).hashCode();
     }
 }
