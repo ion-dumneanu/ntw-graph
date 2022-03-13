@@ -1,3 +1,4 @@
+package edu.kit.informatik;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,13 +8,13 @@ import static java.util.stream.Collectors.toList;
 
 public class IP implements Comparable<IP> {
 
-    private final static String PART_REGEXP = "([0-9]|([1-9]\\d)|(1\\d{2})|(2[1-4]\\d)|25[0-5])";
+    private final static String PART_REGEXP = "([0-9]|([1-9]\\d)|(1\\d{2})|(2[0-4]\\d)|25[0-5])";
     public final static String REGEXP = PART_REGEXP + "\\." + PART_REGEXP + "\\." + PART_REGEXP + "\\." + PART_REGEXP;
 
     private List<Integer> parts = new ArrayList<>();
 
     public IP(final String pointNotation) throws ParseException {
-        if (pointNotation == null || pointNotation.isBlank()) {
+        if (pointNotation == null || "".equals(pointNotation.trim())) {
             throw new ParseException("invalid IP, null or empty");
         } else if (!pointNotation.matches(REGEXP)) {
             throw new ParseException("invalid IP '" + pointNotation + "'");

@@ -1,3 +1,7 @@
+import edu.kit.informatik.IP;
+import edu.kit.informatik.Network;
+import edu.kit.informatik.ParseException;
+
 import java.util.List;
 
 public class Test {
