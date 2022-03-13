@@ -61,7 +61,4 @@ public class IP implements Comparable<IP> {
         return toString().hashCode();
     }
 
-    public IP copy() throws ParseException {
-        return new IP(join(".", this.parts.stream().map(i->""+i).collect(toList())));
-    }
 }
