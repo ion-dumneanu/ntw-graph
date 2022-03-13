@@ -52,20 +52,25 @@ public class TestTest {
         Character root = 'D';
 
         Map<Character, Set<Character>> rootedGraph = new HashMap<>();
-        int height = 0;
+
         final Queue<Character> queue = new LinkedList<>();
         queue.add(root);
         final Set<Character> visited = new HashSet<>();
 
         while(!queue.isEmpty()){
             Character curr = queue.poll();
-            System.out.println(curr);
             if(!visited.contains(curr)){
                 visited.add(curr);
                 List<Character> unvisitedReverseSorted = graph.get(curr).stream().filter(item -> !visited.contains(item)).collect(Collectors.toList());
+                if(!unvisitedReverseSorted.isEmpty()){
+                    rootedGraph.putIfAbsent(curr, new HashSet<>());
+                    rootedGraph.get(curr).addAll(unvisitedReverseSorted);
+                }
                 queue.addAll(new TreeSet<>(unvisitedReverseSorted));
             }
         }
+
+        System.out.println(rootedGraph);
     }
 
 }
