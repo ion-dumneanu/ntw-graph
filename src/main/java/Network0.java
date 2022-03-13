@@ -1,7 +1,6 @@
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -9,16 +8,26 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 
-public class NetworkFlex {
+public class Network0 {
 
     private final  Map<IP, Set<IP>> graph = new LinkedHashMap<>();
 
-    public NetworkFlex(final IP root, final List<IP> children) {
+    public Network0(final IP root, final List<IP> children) {
         graph.put(root, new TreeSet<>(children));
-        children.forEach(item->graph.put(item,Set.of(root)));
+
+        /*This constructor
+creates a new object instance and adds the given non-empty and valid tree topology
+added to the object instance. The tree topology has height 1 with the argument root as
+root and the node (at least one) in the children list as directly connected
+node. Be sure to copy the items from this list for internal storage,
+since the list could be immutable or subsequently modified by the caller.
+If the arguments do not describe a valid tree topology, or if one of the arguments does not
+is instantiated or contains non-instantiated elements, an appropriate RuntimeException
+thrown.*/
+
     }
 
-    public NetworkFlex(final String bracketNotation) throws ParseException {
+    public Network0(final String bracketNotation) throws ParseException {
         if(bracketNotation==null || bracketNotation.isBlank() || !bracketNotation.matches("\\(.+\\)")){
             throw new ParseException("Invalid network bracket notation provided: "+bracketNotation);
         }
@@ -30,12 +39,17 @@ public class NetworkFlex {
         }
 
         edges.forEach(entry->{
-            graph.putIfAbsent(entry.getKey(), new LinkedHashSet<>(List.of(entry.getValue())));
-            graph.putIfAbsent(entry.getValue(), new LinkedHashSet<>(List.of(entry.getKey())));
-
+            graph.putIfAbsent(entry.getKey(), new LinkedHashSet<>());
             graph.get(entry.getKey()).add(entry.getValue());
-            graph.get(entry.getValue()).add(entry.getKey());
         });
+
+/*
+This constructor creates a new object instance and appends the passed non-empty and
+valid tree topology. The tree topology is written as a character string in brackets
+specified and must correspond to the previously specified format of the parentheses notation.
+If this is not possible or the format is violated, a ParseException is thrown in the constructor
+thrown.
+*/
     }
 
     private static boolean doesTheyShapeACycle(List<Entry<IP, IP>> edges) {
@@ -82,7 +96,7 @@ public class NetworkFlex {
         return  graph.entrySet().stream().map(Entry::getKey).findFirst().orElseThrow();
     }
 
-    public boolean add(final NetworkFlex subnet) throws ParseException {
+    public boolean add(final Network0 subnet) throws ParseException {
         final List<Entry<IP, IP>> networkEdges = calcEdges(toString(getRoot()));
         List<Entry<IP, IP>> subnetEdges = calcEdges(subnet.toString(subnet.getRoot()));
 
@@ -127,10 +141,19 @@ Make sure that there are no side effects between these two object instances, so 
 
     public List<IP> list() {
         final Set<IP> items = new TreeSet<>();
-        items.addAll(graph.keySet());
-        items.addAll(graph.values().stream().flatMap(Collection::stream).collect(Collectors.toSet()));
-
+        for (Entry<IP,Set<IP>> entry:graph.entrySet()
+             ) {
+            items.add(entry.getKey());
+            items.addAll(entry.getValue());
+        }
 	    return new ArrayList<>(items);
+
+    /*
+    This method returns the IP addresses of all currently in the object instance
+    existing nodes in a new and independent list. The addresses in
+    this list are sorted in ascending order according to their overall natural order. Be sure to,
+    that this returned list has no side effects on the instance.
+    * */
     }
 
     public boolean connect(final IP ip1, final IP ip2) {
@@ -206,93 +229,105 @@ If a connection could be removed successfully, true is returned, otherwise alway
     }
 
     public boolean contains(final IP ip) {
-        return graph.keySet().contains(ip) || graph.values().stream().flatMap(Collection::stream).anyMatch(ip::equals);
+	    return list().contains(ip);
     }
 
     public int getHeight(final IP root) {
-        final Map<IP,Set<IP>> rootedGraph = calcGraphByRoot(root);
-        return rootedGraph.size();
-    }
+        int height = 0;
+        boolean hasRoot = false;
 
-    private Map<IP, Set<IP>> calcGraphByRoot(IP root) {
-        Map<IP, Set<IP>> rootedGraph = new LinkedHashMap<>();
+        for (Entry<IP, Set<IP>> entry : graph.entrySet()) {
+           if(!hasRoot && entry.getKey().equals(root)){
+               hasRoot = true;
+//               height++
+           }
 
-        final Queue<IP> queue = new LinkedList<>();
-        queue.add(root);
-        final Set<IP> visited = new HashSet<>();
-
-        while(!queue.isEmpty()){
-            IP curr = queue.poll();
-            if(!visited.contains(curr)){
-                visited.add(curr);
-                List<IP> unvisitedReverseSorted = graph.get(curr).stream().filter(item -> !visited.contains(item)).collect(Collectors.toList());
-                if(!unvisitedReverseSorted.isEmpty()){
-                    rootedGraph.putIfAbsent(curr, new HashSet<>());
-                    rootedGraph.get(curr).addAll(unvisitedReverseSorted);
-                }
-                queue.addAll(new TreeSet<>(unvisitedReverseSorted));
-            }
+           if(hasRoot){
+               height++;
+           }
         }
+        return height;
 
-        return rootedGraph;
+    /*
+     This method returns the integer height of a
+tree topology.
+This tree topology is attached to the existing one determined by the argument
+Picked up a node so that it is considered the top node.
+If the specified
+If the IP address is not assigned internally, 0 is always returned.
+    * */
     }
 
     public List<List<IP>> getLevels(final IP root) {
-        final Map<IP,Set<IP>> graphByRoot = calcGraphByRoot(root);
-
         final List<List<IP>> levels = new ArrayList<>();
-        if(!contains(root)){
+        if(!list().contains(root)){
             return levels;
+        }else{
+            levels.add(List.of(root));
         }
 
-        levels.add(List.of(root));
+        boolean reachedRoot = false;
+        for (Entry<IP, Set<IP>> entry : graph.entrySet()) {
+            if(!reachedRoot && entry.getKey().equals(root)){
+                reachedRoot = true;
+                levels.add(new ArrayList<>(entry.getValue()));
+                continue;
+            }
 
-        graphByRoot.forEach((ip, ips) -> {
-            levels.add(new ArrayList<>(ips).stream().sorted().collect(Collectors.toList()));
-        });
+            if(reachedRoot){
+                levels.add(new ArrayList<>(entry.getValue()));
+            }
+        }
 
 	    return levels;
+
+        /*
+        This method returns the level structure
+a tree topology in list form. The addresses of the network nodes of a level
+are inserted into a sorted list. The whole level structure returned is again
+a list of these lists of the individual levels sorted in ascending order. This tree topology is attached
+the existing node determined by the argument, so that this as her
+top node applies. This given node is assigned the first level and
+its IP address is inserted as the only element of the first inner list. The IP addresses of the
+
+subsequent levels are then inserted into the subsequent list. The addresses in the inner
+Lists for the levels are in ascending order according to their overall natural order
+sorted.
+If there is no node with the specified IP address, only one is instantiated
+empty list returned. Be careful that any returned lists have no side effects
+have on the instance.
+        * */
     }
 
     public List<IP> getRoute(final IP start, final IP end) {
-        if(!list().containsAll(List.of(start,end))){
+        if(graph.get(start)==null || graph.get(start).isEmpty()){
             return List.of();
         }
-        final Map<IP,Set<IP>> graphByRoot = calcGraphByRoot(start);
-        final List<IP> result = new ArrayList<>();
-        getRoute(start,end,graphByRoot,result);
-
-//        if(graphByRoot.get(start).contains(end)){
-//            return List.of(start,end);
-//        }
-//        final List<IP> result = new ArrayList<>();
-//        for (IP item: graphByRoot.get(start)
-//        ) {
-//            result.addAll(getRoute(item, end));
-//            if(!result.isEmpty()){
-//                result.add(0, start);
-//            }
-//        }
-        return result;
-    }
-
-    private void getRoute(final IP start, final IP end, Map<IP, Set<IP>> graphByRoot, List<IP> result) {
-        if (graphByRoot.get(start).contains(end)) {
-            result.addAll(List.of(start, end));
-            return;
+        if(graph.get(start).contains(end)){
+            return List.of(start,end);
         }
-
-        for (IP item : graphByRoot.get(start)
+        final List<IP> result = new ArrayList<>();
+        for (IP item: graph.get(start)
         ) {
-            if (graphByRoot.containsKey(item)) {
-                getRoute(item, end, graphByRoot, result);
-                if (!result.isEmpty()) {
-                    result.add(0, start);
-                }
+            result.addAll(getRoute(item, end));
+            if(!result.isEmpty()){
+                result.add(0,start);
             }
         }
-    }
+        return result;
+/*
+This method gives a list of the individual IP addresses of the network nodes of the shortest route between the
+the start and end node specified by the respective argument.
+The IP address of The starting node is the first item in this list and the IP address of the ending node is the last Element.
 
+The consecutive network nodes in the list must always go through a connection
+be connected in the tree topology.
+
+If one of the two specified network nodes does not exist
+or there is no path between the two, just an instantiated empty list is returned.
+Care must be taken that the returned list has no side effects on the instance.
+        * */
+    }
 
 //    public String toString(IP root) {
 //        if(!list().contains(root)){
@@ -327,17 +362,19 @@ If a connection could be removed successfully, true is returned, otherwise alway
 //    }
 
     public String toString(IP root) {
-        if (!contains(root)) {
+        if (!list().contains(root)) {
             return null;
         }
+        //"(141.255.1.133 0.146.197.108 122.117.67.158),122.117.67.158,(122.117.67.158 (141.255.1.133 0.146.197.108))",
 
-        final Map<IP, Set<IP>> graphByRoot = calcGraphByRoot(root);
+        final HashMap<IP, Set<IP>> forToString = new HashMap<>(graph);
+        final List<Entry<IP, IP>> edges = calcEdges(new HashMap<>(graph));
 
         StringJoiner joiner = new StringJoiner(" ","(",")");
         joiner.add(root.toString());
-        graphByRoot.get(root).stream().sorted(IP::compareTo).forEach(item->{
-            if(graphByRoot.containsKey(item)){
-                joiner.add(toString(item, graphByRoot));
+        graph.get(root).forEach(item->{
+            if(graph.containsKey(item)){
+                joiner.add(toString(item));
             }else{
                 joiner.add(item.toString());
             }
@@ -363,7 +400,7 @@ If a connection could be removed successfully, true is returned, otherwise alway
 
     private String toString(IP root, Map<IP,Set<IP>> graph){
         if(!graph.keySet().contains(graph.get(root))){
-            return Stream.concat(Stream.of(root), graph.get(root).stream().sorted(IP::compareTo)).map(IP::toString).collect(Collectors.joining(" ", "(",")"));
+            return Stream.concat(Stream.of(root), graph.get(root).stream()).map(IP::toString).collect(Collectors.joining(" ", "(",")"));
         }
         return "";
     }

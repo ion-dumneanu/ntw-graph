@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -14,7 +13,7 @@ public class TestTest {
     public void test1() throws ParseException {
         IP root = new IP("141.255.1.133");
         List<List<IP>> levels = List.of(List.of(root), List.of(new IP("0.146.197.108"), new IP("122.117.67.158")));
-        final Network network = new Network(root, levels.get(1));
+        final Network0 network = new Network0(root, levels.get(1));
 
         final String expected = "(141.255.1.133 0.146.197.108 122.117.67.158)";
 
@@ -27,7 +26,7 @@ public class TestTest {
 
     @Test
     public void test2() throws ParseException {
-        final Network network = new Network("(141.255.1.133 0.146.197.108 122.117.67.158)");
+        final Network0 network = new Network0("(141.255.1.133 0.146.197.108 122.117.67.158)");
 
         // "Change" root and call toString, getHeight and getLevels again
         IP root = new IP("122.117.67.158");
