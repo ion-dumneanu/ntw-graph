@@ -221,7 +221,11 @@ public class Network {
             return false;
         }
 
-        return allNetworkSource.get(start).remove(end) && allNetworkSource.get(end).remove(start);
+        final boolean result = allNetworkSource.get(start).remove(end) && allNetworkSource.get(end).remove(start);
+
+        Stream.of(start,end).filter(item->allNetworkSource.get(item).isEmpty()).forEach(allNetworkSource::remove);
+
+        return result;
     }
 
     public boolean contains(final IP ip) {
