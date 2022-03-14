@@ -196,4 +196,20 @@ class Network0Test {
         return root;
     }
 
+
+    @Test
+    void testRegexIps(){
+        // String to be scanned to find the pattern.
+        String line = "(0.0.0.0 (1.1.1.1 (2.2.2.2 (3.3.3.3 4.4.4.4))) (11.11.11.11 12.12.12.12))";
+        String pattern = "(\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\))";
+
+        final Pattern r = Pattern.compile(IP.REGEXP);
+        Matcher m = r.matcher(line);
+
+        int index =0;
+        while(m.find()){
+            System.out.println(++index+ " "+ m.group());
+        }
+    }
+
 }

@@ -32,8 +32,23 @@ public class Network {
         if (hasCycle) {
             throw new ParseException("A network notation with cycle provided: " + bracketNotation);
         }
+//        if(countIpsInStr(bracketNotation)!=list().size()){
+//            throw new ParseException("A cycle network provided, duplicate nodes available: " + bracketNotation);
+//        }
 
         addEdges(edges);
+    }
+
+    private static int countIpsInStr(final String bracketNotation){
+        final Pattern r = Pattern.compile(IP.REGEXP);
+        Matcher m = r.matcher(bracketNotation);
+
+        int index =0;
+        while(m.find()){
+            ++index;
+        }
+        return index;
+
     }
 
     private static void getSubLevels(List<IP> topLevel, Map<IP, Set<IP>> graphByRoot, List<List<IP>> levels) {
@@ -106,7 +121,6 @@ public class Network {
         nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
         return root;
     }
-
 
     private static Set<Edge> calcEdges(final Map<IP, Set<IP>> adjacentList) {
         final Set<Edge> result = new HashSet<>();
