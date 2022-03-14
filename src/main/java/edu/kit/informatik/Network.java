@@ -32,9 +32,6 @@ public class Network {
         if (hasCycle) {
             throw new ParseException("A network notation with cycle provided: " + bracketNotation);
         }
-//        if(countIpsInStr(bracketNotation)!=list().size()){
-//            throw new ParseException("A cycle network provided, duplicate nodes available: " + bracketNotation);
-//        }
 
         addEdges(edges);
     }
