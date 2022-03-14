@@ -23,7 +23,7 @@ public class Network {
     }
 
     public Network(final String bracketNotation) throws ParseException {
-        if (bracketNotation == null || "".equals(bracketNotation.trim()) || !bracketNotation.matches("\\(.+\\)")) {
+        if (bracketNotation == null || "".equals(bracketNotation.trim()) || bracketNotation.matches(".*[(]{2,}.*") || !bracketNotation.matches("\\(.+\\)" )) {
             throw new ParseException("Invalid network bracket notation provided: " + bracketNotation);
         }
 
