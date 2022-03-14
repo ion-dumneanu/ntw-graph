@@ -33,6 +33,10 @@ public class Network {
             throw new ParseException("A network notation with cycle provided: " + bracketNotation);
         }
 
+//        if (countIpsInStr(bracketNotation)!=list().size()) {
+//            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
+//        }
+
         addEdges(edges);
     }
 
@@ -45,7 +49,6 @@ public class Network {
             ++index;
         }
         return index;
-
     }
 
     private static void getSubLevels(List<IP> topLevel, Map<IP, Set<IP>> graphByRoot, List<List<IP>> levels) {
@@ -116,6 +119,9 @@ public class Network {
         List<String> nodes = asList(onlyIpWithSpaces.split("\\s"));
         String root = nodes.get(0);
         nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
+        if(nodes.size() != new HashSet<>(nodes).size()){
+            throw new ParseException("Duplicated nodes at same level found!");
+        }
         return root;
     }
 
@@ -342,7 +348,10 @@ public class Network {
         if (other == null || getClass() != other.getClass()) return false;
         Network network = (Network) other;
 
-        return Objects.equals(list(), network.list());
+//        return Objects.equals(list(), network.list());
+
+        final IP someNode4Root = list().get(0);
+        return Objects.equals(toString(someNode4Root), network.toString(someNode4Root));
     }
 
     @Override
