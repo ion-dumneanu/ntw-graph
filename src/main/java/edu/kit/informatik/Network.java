@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 
 public class Network {
@@ -25,6 +26,23 @@ public class Network {
         if (bracketNotation == null || "".equals(bracketNotation.trim()) || !bracketNotation.matches("\\(.+\\)")) {
             throw new ParseException("Invalid network bracket notation provided: " + bracketNotation);
         }
+//        final String groupPattern = "(\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\))";
+//
+//        final List<Edge> edges = new ArrayList<>();
+//        final Pattern r = Pattern.compile(groupPattern);
+//        String line = bracketNotation;
+//
+//        while(!line.matches(IP.REGEXP)){
+//            Matcher m = r.matcher(line);
+//            m.find();
+//            String groupMatch = m.group();
+//            line = line.replaceFirst("\\("+groupMatch+"\\)", process(groupMatch, edges));
+//        }
+//
+//        Set<Edge> edgesSet = new HashSet<>(edges);
+//        if(edgesSet.size()!=edges.size()){
+//            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
+//        }
 
         final Set<Edge> edges = calcEdges(bracketNotation);
         boolean hasCycle = doesTheyShapeACycle(edges);
@@ -34,6 +52,15 @@ public class Network {
 
         addEdges(edges);
     }
+
+    private static String process(String value, List<Edge> edges){
+        String onlyIpWithSpaces = value.replaceAll("[()]", "");
+        List<String> nodes = asList(onlyIpWithSpaces.split("\\s"));
+        String root = nodes.get(0);
+        nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
+        return root;
+    }
+
 
     private static void getSubLevels(List<IP> topLevel, Map<IP, Set<IP>> graphByRoot, List<List<IP>> levels) {
         List<IP> subLevel = new ArrayList<>();
@@ -74,31 +101,28 @@ public class Network {
     }
 
     private static Set<Edge> calcEdges(String bracketNotation) {
+        final String groupPattern = "(\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\))";
 
-        Map<IP, Set<IP>> adjList = new LinkedHashMap<>();
-        Stack<IP> stack = new Stack<>();
-        Iterator<String> iterator = List.of(bracketNotation.split("\\s+")).iterator();
+        final List<Edge> edges = new ArrayList<>();
+        final Pattern r = Pattern.compile(groupPattern);
+        String line = bracketNotation;
 
-        while (iterator.hasNext()) {
-            String curr = iterator.next();
-            if (curr.startsWith("(")) {
-                IP preAdd = new IP(curr.replaceFirst("\\(", ""));
-                if (!stack.empty()) {
-                    adjList.get(stack.peek()).add(preAdd);
-                }
-                stack.add(preAdd);
-                adjList.put(preAdd, new LinkedHashSet<>());
-            } else if (curr.endsWith(")")) {
-                Matcher matcher = Pattern.compile("(" + IP.REGEXP + ")\\)+").matcher(curr);
-                matcher.find();
-                IP preAdd = new IP(matcher.group(1));
-                adjList.get(stack.pop()).add(preAdd);
-            } else {
-                adjList.get(stack.peek()).add(new IP(curr));
+        while(!line.matches(IP.REGEXP)){
+            Matcher m = r.matcher(line);
+            if(m.find()) {
+                String groupMatch = m.group();
+                line = line.replaceFirst("\\("+groupMatch+"\\)", process(groupMatch, edges));
+            }else{
+                throw new ParseException("invalid network notation provided: "+bracketNotation);
             }
         }
 
-        return calcEdges(adjList);
+        Set<Edge> edgesSet = new HashSet<>(edges);
+        if(edgesSet.size()!=edges.size()){
+            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
+        }
+
+        return edgesSet;
     }
 
     private static Set<Edge> calcEdges(final Map<IP, Set<IP>> adjacentList) {
@@ -146,16 +170,11 @@ public class Network {
         final List<IP> commonNodes = subnetNodes;
 
         final List<Edge> networkInvolvedEdges = new ArrayList<>();
-        commonNodes.forEach(node -> {
-            networkInvolvedEdges.addAll(calcEdges(calcGraphByRoot(node, allNetworkSource)));
-        });
-
+        commonNodes.forEach(node -> networkInvolvedEdges.addAll(calcEdges(calcGraphByRoot(node, allNetworkSource))));
 
         final Set<Edge> subnetworkEdges = new HashSet<>();//calcEdges(subnet.toString(commonNodes.get(0)));
 
-        commonNodes.forEach(node -> {
-            subnetworkEdges.addAll(calcEdges(subnet.toString(node)));
-        });
+        commonNodes.forEach(node -> subnetworkEdges.addAll(calcEdges(subnet.toString(node))));
 
         final Set<Edge> unionEdges = Stream.concat(networkInvolvedEdges.stream(), subnetworkEdges.stream()).collect(Collectors.toSet());
         if (doesTheyShapeACycle(unionEdges)) {
@@ -364,5 +383,14 @@ public class Network {
             Arrays.sort(arr);
             return Arrays.hashCode(arr);
         }
+
+        @Override
+        public String toString() {
+            return "Edge{" +
+                    "key=" + key +
+                    ", value=" + value +
+                    '}';
+        }
+
     }
 }

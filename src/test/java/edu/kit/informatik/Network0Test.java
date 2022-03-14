@@ -1,12 +1,17 @@
 package edu.kit.informatik;
 
+import edu.kit.informatik.Network.Edge;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.*;
 
 class Network0Test {
@@ -15,7 +20,7 @@ class Network0Test {
     @CsvSource({"(141.255.1.133 0.146.197.108 122.117.67.158),141.255.1.133,1",
                 "(85.193.148.81 (141.255.1.133 122.117.67.158 0.146.197.108) 34.49.145.239 (231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77)),141.255.1.133,3",
                 "(0.0.0.0 (1.1.1.1 2.2.2.2 3.3.3.3) (4.4.4.4 5.5.5.5 (6.6.6.6 7.7.7.7 (8.8.8.8 (9.9.9.9 10.10.10.10))))),0.0.0.0,5"})
-    void getHeight(String input, String root, int height) throws ParseException, IllegalAccessException {
+    void getHeight(String input, String root, int height) throws ParseException {
         Network network = new Network(input);
         assertEquals(height, network.getHeight(new IP(root)));
     }
@@ -61,9 +66,9 @@ class Network0Test {
             "(141.255.1.133 122.117.67.158 0.146.197.108),141.255.1.133,(141.255.1.133 0.146.197.108 122.117.67.158)",
             "(231.189.0.127 77.135.84.171 39.20.222.120 252.29.23.0 116.132.83.77),231.189.0.127,(231.189.0.127 39.20.222.120 77.135.84.171 116.132.83.77 252.29.23.0)",
             "(85.193.148.81 (141.255.1.133 34.49.145.239 30.49.145.239) 140.189.0.127),34.49.145.239,(34.49.145.239 (141.255.1.133 30.49.145.239 (85.193.148.81 140.189.0.127)))",
-            "(85.193.148.81 (141.255.1.133 34.49.145.239 (30.49.145.239 0.0.0.0 1.1.1.1)) 140.189.0.127),0.0.0.0,(0.0.0.0 (30.49.145.239 1.1.1.1 (141.255.1.133 34.49.145.239 85.193.148.81 140.189.0.127)))"})
+            "(85.193.148.81 (141.255.1.133 34.49.145.239 (30.49.145.239 0.0.0.0 1.1.1.1)) 140.189.0.127),0.0.0.0,(0.0.0.0 (30.49.145.239 1.1.1.1 (141.255.1.133 34.49.145.239 (85.193.148.81 140.189.0.127))))"})
     void testToString(String input, String root, String expectedToString) throws ParseException {
-        assertEquals(expectedToString, new Network(input).toString(new IP(root))); ;
+        assertEquals(expectedToString, new Network(input).toString(new IP(root)));
     }
 
     @Test
@@ -74,7 +79,7 @@ class Network0Test {
         final IP start = new IP("85.193.148.81");
         final IP end = new IP("111.132.83.77");
 
-        final List<IP> expectedRoute = List.of("85.193.148.81", "211.189.0.127", "71.135.84.171", "31.20.222.120", "251.29.23.0", "111.132.83.77").stream().map(IP::new).collect(Collectors.toList());
+        final List<IP> expectedRoute = Stream.of("85.193.148.81", "211.189.0.127", "71.135.84.171", "31.20.222.120", "251.29.23.0", "111.132.83.77").map(IP::new).collect(Collectors.toList());
         final List<IP> actualRoute = network.getRoute(start, end);
         assertEquals(expectedRoute, actualRoute);
     }
@@ -163,28 +168,32 @@ class Network0Test {
     }
 
 //    @Test
-    void testRegexGroup(){
+    void testRegexAll(){
         // String to be scanned to find the pattern.
-        String line = "(2.2.2.2 (0.0.0.0 1.1.1.1))";
-        String pattern = "\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\)";//"\\([0-9\\s?]+?\\)";
+        String line = "(0.0.0.0 (1.1.1.1 (2.2.2.2 (3.3.3.3 4.4.4.4))) (11.11.11.11 12.12.12.12))";
+        String pattern = "(\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\))";
 
-        System.out.println(line.replaceFirst(pattern, "zzzzzzzzzzzzz"));
+        final List<Edge> edges = new ArrayList<>();
+        final Pattern r = Pattern.compile(pattern);
+        System.out.println(line);
 
-        System.out.println("(2.2.2.2 (0.0.0.0 1.1.1.1))".matches("\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\)"));
+        while(!line.matches(IP.REGEXP)){
+            Matcher m = r.matcher(line);
+            m.find();
+            String groupMatch = m.group();
+            line = line.replaceFirst("\\("+groupMatch+"\\)", process(groupMatch, edges));
+            System.out.println(line);
+        }
 
-//        // Create a Pattern object
-//        Pattern r = Pattern.compile(pattern);
-//
-//        // Now create matcher object.
-//        Matcher m = r.matcher(line);
-//
-//        if (m.find( )) {
-//            System.out.println("Found value: " + m.group(0) );
-//            System.out.println("Found value: " + m.group(1) );
-//            System.out.println("Found value: " + m.group(2) );
-//        } else {
-//            System.out.println("NO MATCH");
-//        }
+        System.out.println(edges);
+    }
+    private String process(String value, List<Edge> edges){
+        String onlyIpWithSpaces = value.replaceAll("[()]", "");
+        List<String> nodes = asList(onlyIpWithSpaces.split("\\s"));
+        String root = nodes.get(0);
+        nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
+//        System.out.println(edges);
+        return root;
     }
 
 }
