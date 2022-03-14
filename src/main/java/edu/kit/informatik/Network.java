@@ -26,23 +26,6 @@ public class Network {
         if (bracketNotation == null || "".equals(bracketNotation.trim()) || !bracketNotation.matches("\\(.+\\)")) {
             throw new ParseException("Invalid network bracket notation provided: " + bracketNotation);
         }
-//        final String groupPattern = "(\\("+IP.REGEXP+"(\\s"+IP.REGEXP+")+\\))";
-//
-//        final List<Edge> edges = new ArrayList<>();
-//        final Pattern r = Pattern.compile(groupPattern);
-//        String line = bracketNotation;
-//
-//        while(!line.matches(IP.REGEXP)){
-//            Matcher m = r.matcher(line);
-//            m.find();
-//            String groupMatch = m.group();
-//            line = line.replaceFirst("\\("+groupMatch+"\\)", process(groupMatch, edges));
-//        }
-//
-//        Set<Edge> edgesSet = new HashSet<>(edges);
-//        if(edgesSet.size()!=edges.size()){
-//            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
-//        }
 
         final Set<Edge> edges = calcEdges(bracketNotation);
         boolean hasCycle = doesTheyShapeACycle(edges);
