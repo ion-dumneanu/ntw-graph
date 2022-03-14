@@ -36,15 +36,6 @@ public class Network {
         addEdges(edges);
     }
 
-    private static String process(String value, List<Edge> edges){
-        String onlyIpWithSpaces = value.replaceAll("[()]", "");
-        List<String> nodes = asList(onlyIpWithSpaces.split("\\s"));
-        String root = nodes.get(0);
-        nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
-        return root;
-    }
-
-
     private static void getSubLevels(List<IP> topLevel, Map<IP, Set<IP>> graphByRoot, List<List<IP>> levels) {
         List<IP> subLevel = new ArrayList<>();
         graphByRoot.forEach((ip, ips) -> {
@@ -107,6 +98,15 @@ public class Network {
 
         return edgesSet;
     }
+
+    private static String process(String value, List<Edge> edges){
+        String onlyIpWithSpaces = value.replaceAll("[()]", "");
+        List<String> nodes = asList(onlyIpWithSpaces.split("\\s"));
+        String root = nodes.get(0);
+        nodes.subList(1,nodes.size()).forEach(ipStr->edges.add(new Edge(new IP(root), new IP(ipStr))));
+        return root;
+    }
+
 
     private static Set<Edge> calcEdges(final Map<IP, Set<IP>> adjacentList) {
         final Set<Edge> result = new HashSet<>();
