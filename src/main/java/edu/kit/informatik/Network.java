@@ -33,11 +33,11 @@ public class Network {
             throw new ParseException("A network notation with cycle provided: " + bracketNotation);
         }
 
-//        if (countIpsInStr(bracketNotation)!=list().size()) {
-//            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
-//        }
-
         addEdges(edges);
+
+        if (countIpsInStr(bracketNotation)!=list().size()) {
+            throw new ParseException("A network notation with cycle provided: " + bracketNotation);
+        }
     }
 
     private static int countIpsInStr(final String bracketNotation){
