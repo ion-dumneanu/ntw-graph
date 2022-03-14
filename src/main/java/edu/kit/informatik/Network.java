@@ -213,7 +213,7 @@ public class Network {
     }
 
     public boolean disconnect(final IP start, final IP end) {
-        if (start == null || start == null || start.equals(end) || !list().containsAll(List.of(start,end))) {
+        if (start == null || end == null || start.equals(end) || !list().containsAll(List.of(start,end))) {
             return false;
         }
 

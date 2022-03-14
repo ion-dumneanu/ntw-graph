@@ -29,7 +29,7 @@ public class NetworkAddTest {
     }
 
     static Stream<Arguments> unionProvider() {
-        return IntStream.range(3, 6).mapToObj(NetworkAddTest::unionArgs);
+        return IntStream.range(0, 6).mapToObj(NetworkAddTest::unionArgs);
     }
 
     static Arguments unionArgs(int id) {
